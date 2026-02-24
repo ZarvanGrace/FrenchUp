@@ -1,0 +1,1556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FrenchUp — Revision App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --bg2: #111111;
+    --bg3: #1a1a1a;
+    --bg4: #222222;
+    --accent: #7c3aed;
+    --accent2: #a855f7;
+    --accent3: #c084fc;
+    --glow: rgba(124,58,237,0.35);
+    --green: #22c55e;
+    --red: #ef4444;
+    --gold: #f59e0b;
+    --text: #f5f5f5;
+    --text2: #a1a1aa;
+    --text3: #71717a;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(124,58,237,0.3);
+    --card-shadow: 0 8px 32px rgba(0,0,0,0.6);
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    overflow: hidden;
+  }
+
+  /* ── NOISE TEXTURE ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.4;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 24px;
+    height: 56px;
+    background: rgba(10,10,10,0.9);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 18px;
+    letter-spacing: -0.5px;
+    color: var(--accent3);
+    margin-right: 12px;
+    text-shadow: 0 0 24px var(--glow);
+    flex-shrink: 0;
+  }
+
+  nav .spacer { flex: 1; }
+
+  .nav-btn {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 14px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--text2);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .nav-btn:hover { color: var(--text); background: var(--bg3); }
+  .nav-btn.active {
+    color: var(--accent3);
+    background: rgba(124,58,237,0.15);
+  }
+  .nav-btn .icon { font-size: 16px; }
+
+  /* ── PAGES ── */
+  .page {
+    position: fixed;
+    inset: 56px 0 0 0;
+    display: none;
+    overflow: hidden;
+  }
+  .page.active { display: flex; flex-direction: column; }
+
+  /* ── PAGE HEADER ── */
+  .page-header {
+    padding: 20px 28px 14px;
+    flex-shrink: 0;
+  }
+  .page-header h1 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    letter-spacing: -0.3px;
+  }
+  .page-header p { color: var(--text2); font-size: 13.5px; margin-top: 2px; }
+
+  /* ── SCROLL AREA ── */
+  .scroll-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 28px 28px;
+  }
+  .scroll-area::-webkit-scrollbar { width: 4px; }
+  .scroll-area::-webkit-scrollbar-track { background: transparent; }
+  .scroll-area::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 4px; }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--card-shadow);
+  }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 9px 20px;
+    border-radius: var(--radius-sm);
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: white;
+    box-shadow: 0 0 20px var(--glow);
+  }
+  .btn-primary:hover { background: var(--accent2); transform: translateY(-1px); box-shadow: 0 4px 24px var(--glow); }
+  .btn-ghost {
+    background: var(--bg3);
+    color: var(--text2);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { background: var(--bg4); color: var(--text); }
+  .btn-green { background: var(--green); color: white; }
+  .btn-green:hover { filter: brightness(1.1); }
+  .btn-red { background: var(--red); color: white; }
+  .btn-red:hover { filter: brightness(1.1); }
+  .btn-gold { background: var(--gold); color: #111; }
+  .btn-gold:hover { filter: brightness(1.1); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+
+  /* ────────────────────────────────────────────
+     FLASHCARDS PAGE
+  ──────────────────────────────────────────── */
+  #page-flash .content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 0 28px 28px;
+    overflow: hidden;
+  }
+
+  /* pack selector overlay */
+  #flash-pack-select {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    text-align: center;
+  }
+  #flash-pack-select h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
+  #flash-pack-select p { color: var(--text2); font-size: 14px; max-width: 360px; }
+  .pack-card {
+    width: 300px;
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+  }
+  .pack-card:hover { background: var(--bg3); border-color: var(--accent2); transform: translateY(-2px); box-shadow: 0 8px 24px var(--glow); }
+  .pack-card .pack-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px; }
+  .pack-card .pack-meta { color: var(--text2); font-size: 13px; margin-top: 4px; }
+  .pack-card .pack-due { color: var(--accent3); font-size: 13px; margin-top: 6px; font-weight: 500; }
+
+  /* flashcard study area */
+  #flash-study { display: none; width: 100%; max-width: 480px; }
+  #flash-study.visible { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+
+  .flash-progress {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+    color: var(--text2);
+  }
+  .progress-bar-track {
+    flex: 1;
+    height: 4px;
+    background: var(--bg4);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent3));
+    border-radius: 99px;
+    transition: width 0.4s ease;
+  }
+
+  /* the flip card */
+  .flip-container {
+    width: 100%;
+    max-width: 480px;
+    height: 220px;
+    perspective: 1000px;
+    cursor: pointer;
+  }
+  .flip-inner {
+    width: 100%; height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .flip-inner.flipped { transform: rotateY(180deg); }
+  .flip-front, .flip-back {
+    position: absolute; inset: 0;
+    backface-visibility: hidden;
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 28px;
+    box-shadow: 0 8px 40px rgba(124,58,237,0.2);
+  }
+  .flip-back { transform: rotateY(180deg); background: var(--bg3); border-color: var(--accent); }
+  .flip-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 12px;
+  }
+  .flip-word {
+    font-family: 'Syne', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    text-align: center;
+    line-height: 1.3;
+  }
+  .flip-hint { font-size: 12px; color: var(--text3); margin-top: 10px; }
+
+  .rating-row {
+    display: flex; gap: 10px; width: 100%;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .rating-row.show { opacity: 1; pointer-events: all; }
+  .rating-row .btn { flex: 1; flex-direction: column; gap: 2px; padding: 10px 8px; font-size: 13px; }
+  .rating-row .btn .sub { font-size: 11px; opacity: 0.7; }
+
+  .interval-row {
+    display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; width: 100%;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .interval-row.show { opacity: 1; pointer-events: all; }
+  .interval-row .btn { font-size: 12.5px; padding: 7px 14px; }
+
+  #flash-done {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    text-align: center;
+  }
+  #flash-done.visible { display: flex; }
+  #flash-done h2 { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; }
+  #flash-done p { color: var(--text2); max-width: 300px; }
+
+  /* ────────────────────────────────────────────
+     QUIZ PAGE
+  ──────────────────────────────────────────── */
+  #page-quiz .content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0 28px 28px;
+    gap: 20px;
+    overflow: hidden;
+  }
+
+  #quiz-start { display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center; }
+  #quiz-start h2 { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700; }
+  #quiz-start p { color: var(--text2); max-width: 340px; font-size: 14px; }
+  .quiz-mode-grid {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;
+    width: 100%; max-width: 480px;
+  }
+  .quiz-mode-btn {
+    background: var(--bg2);
+    border: 2px solid transparent;
+    border-radius: var(--radius-sm);
+    padding: 14px 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text2);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+  }
+  .quiz-mode-btn .qm-icon { font-size: 22px; display: block; margin-bottom: 6px; }
+  .quiz-mode-btn:hover, .quiz-mode-btn.selected { border-color: var(--accent); color: var(--text); background: rgba(124,58,237,0.1); }
+
+  #quiz-game { display: none; width: 100%; max-width: 500px; flex-direction: column; gap: 16px; }
+  #quiz-game.visible { display: flex; }
+
+  .quiz-header {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 13px; color: var(--text2);
+  }
+  .xp-badge {
+    background: rgba(245,158,11,0.15);
+    border: 1px solid rgba(245,158,11,0.3);
+    color: var(--gold);
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .quiz-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: var(--card-shadow);
+  }
+  .quiz-type-tag {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--accent3);
+    margin-bottom: 10px;
+  }
+  .quiz-question {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 18px;
+    line-height: 1.3;
+  }
+
+  .mc-options { display: flex; flex-direction: column; gap: 8px; }
+  .mc-option {
+    background: var(--bg3);
+    border: 2px solid transparent;
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14.5px;
+    color: var(--text);
+    text-align: left;
+    transition: all 0.18s;
+    width: 100%;
+  }
+  .mc-option:hover:not(:disabled) { border-color: var(--accent); background: rgba(124,58,237,0.1); }
+  .mc-option.correct { border-color: var(--green); background: rgba(34,197,94,0.12); color: var(--green); }
+  .mc-option.wrong { border-color: var(--red); background: rgba(239,68,68,0.12); color: var(--red); }
+
+  .fitb-input {
+    width: 100%;
+    background: var(--bg3);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+    margin-bottom: 10px;
+  }
+  .fitb-input:focus { border-color: var(--accent); }
+  .fitb-input.correct { border-color: var(--green); background: rgba(34,197,94,0.08); }
+  .fitb-input.wrong { border-color: var(--red); background: rgba(239,68,68,0.08); }
+
+  .match-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .match-col { display: flex; flex-direction: column; gap: 8px; }
+  .match-item {
+    background: var(--bg3);
+    border: 2px solid transparent;
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-size: 13.5px;
+    cursor: pointer;
+    transition: all 0.18s;
+    text-align: center;
+    min-height: 46px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .match-item.selected { border-color: var(--accent); background: rgba(124,58,237,0.15); }
+  .match-item.matched-correct { border-color: var(--green); background: rgba(34,197,94,0.1); color: var(--green); }
+  .match-item.matched-wrong { border-color: var(--red); background: rgba(239,68,68,0.1); }
+
+  .quiz-feedback {
+    text-align: center;
+    font-size: 14px;
+    font-weight: 500;
+    min-height: 24px;
+    transition: all 0.2s;
+  }
+  .quiz-feedback.correct { color: var(--green); }
+  .quiz-feedback.wrong { color: var(--red); }
+
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    20% { transform: translateX(-8px); }
+    40% { transform: translateX(8px); }
+    60% { transform: translateX(-5px); }
+    80% { transform: translateX(5px); }
+  }
+  .shake { animation: shake 0.4s ease; }
+
+  @keyframes pop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.04); }
+    100% { transform: scale(1); }
+  }
+  .pop { animation: pop 0.3s ease; }
+
+  #quiz-result { display: none; flex-direction: column; align-items: center; gap: 16px; text-align: center; }
+  #quiz-result.visible { display: flex; }
+  .score-circle {
+    width: 110px; height: 110px;
+    border-radius: 50%;
+    background: conic-gradient(var(--accent) 0%, var(--accent3) calc(var(--pct) * 1%), var(--bg3) calc(var(--pct) * 1%));
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 40px var(--glow);
+    position: relative;
+  }
+  .score-circle::before {
+    content: '';
+    position: absolute;
+    inset: 10px;
+    border-radius: 50%;
+    background: var(--bg);
+  }
+  .score-circle .score-num {
+    position: relative; z-index: 1;
+    font-family: 'Syne', sans-serif;
+    font-size: 24px; font-weight: 800;
+  }
+  #quiz-result h2 { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; }
+  #quiz-result p { color: var(--text2); font-size: 14px; }
+
+  /* ────────────────────────────────────────────
+     VOCAB LIST PAGE
+  ──────────────────────────────────────────── */
+  #page-vocab .content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 0 28px 20px;
+    gap: 14px;
+    overflow: hidden;
+  }
+
+  .vocab-toolbar {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  .search-input {
+    flex: 1;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 9px 14px 9px 36px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+    position: relative;
+  }
+  .search-input:focus { border-color: var(--accent); }
+  .search-wrap { position: relative; flex: 1; }
+  .search-wrap .search-icon {
+    position: absolute;
+    left: 12px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--text3);
+    font-size: 15px;
+    pointer-events: none;
+  }
+
+  .toggle-dir {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--text2);
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .toggle-dir:hover { border-color: var(--accent); color: var(--text); }
+  .toggle-dir.active-dir { border-color: var(--accent); color: var(--accent3); background: rgba(124,58,237,0.1); }
+
+  .vocab-table-wrap {
+    flex: 1;
+    overflow: hidden;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .vocab-table {
+    width: 100%;
+    border-collapse: collapse;
+    flex-shrink: 0;
+  }
+  .vocab-table th {
+    background: var(--bg3);
+    padding: 11px 16px;
+    text-align: left;
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--text3);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0;
+  }
+  .vocab-table td {
+    padding: 12px 16px;
+    font-size: 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .vocab-table tr:last-child td { border-bottom: none; }
+  .vocab-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .vocab-col-fr { color: var(--accent3); font-weight: 500; }
+  .vocab-col-en { color: var(--text2); }
+
+  .table-scroll {
+    flex: 1;
+    overflow-y: auto;
+  }
+  .table-scroll::-webkit-scrollbar { width: 3px; }
+  .table-scroll::-webkit-scrollbar-thumb { background: var(--bg4); }
+
+  .vocab-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .page-info { font-size: 13px; color: var(--text3); }
+  .vocab-pagination .btn { padding: 6px 14px; font-size: 13px; }
+
+  /* ────────────────────────────────────────────
+     GRAMMAR PAGE
+  ──────────────────────────────────────────── */
+  #page-grammar .scroll-area {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    align-content: start;
+  }
+  @media (max-width: 600px) {
+    #page-grammar .scroll-area { grid-template-columns: 1fr; }
+  }
+  .grammar-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--card-shadow);
+    transition: border-color 0.2s;
+  }
+  .grammar-card:hover { border-color: var(--border2); }
+  .grammar-card.wide { grid-column: 1 / -1; }
+  .grammar-card h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .grammar-card h3 .icon {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    background: rgba(124,58,237,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .grammar-card p, .grammar-card li {
+    font-size: 13.5px;
+    color: var(--text2);
+    line-height: 1.7;
+  }
+  .grammar-card ul { padding-left: 18px; }
+  .grammar-card ul li { margin-bottom: 4px; }
+  .grammar-tag {
+    display: inline-block;
+    background: rgba(124,58,237,0.2);
+    color: var(--accent3);
+    border: 1px solid rgba(124,58,237,0.35);
+    border-radius: 6px;
+    padding: 1px 8px;
+    font-size: 12.5px;
+    font-weight: 600;
+    margin: 2px;
+    font-family: 'Syne', sans-serif;
+  }
+  .grammar-tag.masc { background: rgba(59,130,246,0.15); color: #93c5fd; border-color: rgba(59,130,246,0.3); }
+  .grammar-tag.fem { background: rgba(236,72,153,0.15); color: #f9a8d4; border-color: rgba(236,72,153,0.3); }
+  .grammar-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-top: 8px;
+  }
+  .grammar-table th, .grammar-table td {
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  .grammar-table th { color: var(--text3); font-size: 11px; letter-spacing: 0.8px; text-transform: uppercase; font-weight: 600; }
+  .grammar-table td { color: var(--text2); }
+  .grammar-table td:first-child { color: var(--accent3); font-weight: 500; }
+  .highlight-box {
+    background: rgba(124,58,237,0.08);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    padding: 10px 14px;
+    margin-top: 10px;
+    font-size: 13.5px;
+    color: var(--text2);
+    font-style: italic;
+  }
+  .pronunciation-box {
+    background: var(--bg3);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .ipa {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--gold);
+    font-family: 'Syne', sans-serif;
+    min-width: 40px;
+    text-align: center;
+  }
+  .pronunciation-box p { font-size: 13px; color: var(--text2); }
+
+  /* ── PAGE TRANSITIONS ── */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .page.active { animation: fadeIn 0.3s ease; }
+
+  /* ── MOBILE ── */
+  @media (max-width: 600px) {
+    nav { padding: 0 12px; gap: 4px; }
+    .nav-btn { padding: 5px 9px; font-size: 12px; }
+    .nav-logo { font-size: 15px; }
+    .page-header { padding: 14px 16px 10px; }
+    .page-header h1 { font-size: 18px; }
+    .scroll-area { padding: 0 16px 16px; }
+    #page-vocab .content, #page-quiz .content, #page-flash .content { padding: 0 16px 16px; }
+    .quiz-mode-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">🇫🇷 FrenchUp</div>
+  <div class="spacer"></div>
+  <button class="nav-btn active" onclick="showPage('flash')">
+    <span class="icon">🃏</span> Cards
+  </button>
+  <button class="nav-btn" onclick="showPage('quiz')">
+    <span class="icon">🎮</span> Quiz
+  </button>
+  <button class="nav-btn" onclick="showPage('vocab')">
+    <span class="icon">📖</span> Vocab
+  </button>
+  <button class="nav-btn" onclick="showPage('grammar')">
+    <span class="icon">📚</span> Grammar
+  </button>
+</nav>
+
+<!-- ═══════════════════════════════════ FLASHCARDS PAGE ═════ -->
+<div class="page active" id="page-flash">
+  <div class="page-header">
+    <h1>Flashcards</h1>
+    <p>Spaced repetition — your brain's actual enemy, but in a good way.</p>
+  </div>
+  <div class="content">
+    <!-- Pack Selection -->
+    <div id="flash-pack-select">
+      <h2>Choose a Pack</h2>
+      <p>Due cards are surfaced first. New cards fill in when you're done flexing.</p>
+      <div id="pack-list"></div>
+    </div>
+
+    <!-- Study Area -->
+    <div id="flash-study">
+      <div class="flash-progress">
+        <span id="flash-count">0 / 0</span>
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill" id="flash-progress-fill" style="width:0%"></div>
+        </div>
+      </div>
+
+      <div class="flip-container" id="flip-container" onclick="flipCard()">
+        <div class="flip-inner" id="flip-inner">
+          <div class="flip-front">
+            <div class="flip-label">French</div>
+            <div class="flip-word" id="flip-fr">—</div>
+            <div class="flip-hint">tap to reveal</div>
+          </div>
+          <div class="flip-back">
+            <div class="flip-label">English</div>
+            <div class="flip-word" id="flip-en">—</div>
+            <div class="flip-hint">how'd you do?</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rating buttons (appear after flip) -->
+      <div class="rating-row" id="rating-row">
+        <button class="btn btn-green" onclick="rate('knew')">
+          ✅ Knew it
+          <span class="sub">nailed it</span>
+        </button>
+        <button class="btn btn-gold" onclick="rate('almost')">
+          🤔 Almost
+          <span class="sub">close enough</span>
+        </button>
+        <button class="btn btn-red" onclick="rate('nope')">
+          ❌ Nope
+          <span class="sub">total disaster</span>
+        </button>
+      </div>
+
+      <!-- Interval selection (appear after rating) -->
+      <div class="interval-row" id="interval-row">
+        <span style="color:var(--text3);font-size:13px;width:100%;text-align:center;">Review again in…</span>
+        <button class="btn btn-ghost" onclick="setInterval_(2*60*60*1000)">2 hours</button>
+        <button class="btn btn-ghost" onclick="setInterval_(24*60*60*1000)">1 day</button>
+        <button class="btn btn-ghost" onclick="setInterval_(3*24*60*60*1000)">3 days</button>
+        <button class="btn btn-ghost" onclick="setInterval_(7*24*60*60*1000)">1 week</button>
+        <button class="btn btn-ghost" onclick="setInterval_(30*24*60*60*1000)">1 month</button>
+      </div>
+    </div>
+
+    <!-- Done screen -->
+    <div id="flash-done">
+      <div style="font-size:56px">🎉</div>
+      <h2>Session complete!</h2>
+      <p>All due cards reviewed. Come back later when more are due, or keep hammering new ones.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+        <button class="btn btn-primary" onclick="backToPacks()">← Back to packs</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ QUIZ PAGE ═════════════ -->
+<div class="page" id="page-quiz">
+  <div class="page-header">
+    <h1>Quiz</h1>
+    <p>10 questions. Try not to embarrass yourself too badly.</p>
+  </div>
+  <div class="content">
+    <!-- Start screen -->
+    <div id="quiz-start">
+      <h2>Choose a question type</h2>
+      <p>Pick your poison. All draw from Pack 1 "Les Bases".</p>
+      <div class="quiz-mode-grid">
+        <div class="quiz-mode-btn selected" data-mode="mc" onclick="selectMode(this,'mc')">
+          <span class="qm-icon">🎯</span>Multiple Choice
+        </div>
+        <div class="quiz-mode-btn" data-mode="fitb" onclick="selectMode(this,'fitb')">
+          <span class="qm-icon">✍️</span>Fill in Blank
+        </div>
+        <div class="quiz-mode-btn" data-mode="match" onclick="selectMode(this,'match')">
+          <span class="qm-icon">🔗</span>Match Pairs
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="startQuiz()" style="margin-top:4px;">Start Round →</button>
+    </div>
+
+    <!-- Game area -->
+    <div id="quiz-game">
+      <div class="quiz-header">
+        <div class="progress-bar-track" style="flex:1;height:6px;">
+          <div class="progress-bar-fill" id="quiz-progress-fill" style="width:0%"></div>
+        </div>
+        <span id="quiz-q-count" style="flex-shrink:0;">1 / 10</span>
+        <div class="xp-badge" id="quiz-xp">⚡ 0 XP</div>
+      </div>
+
+      <div class="quiz-card" id="quiz-card">
+        <div class="quiz-type-tag" id="quiz-type-tag">Multiple Choice</div>
+        <div class="quiz-question" id="quiz-question">Loading…</div>
+        <div id="quiz-answer-area"></div>
+      </div>
+
+      <div class="quiz-feedback" id="quiz-feedback"></div>
+      <button class="btn btn-primary" id="quiz-next-btn" style="display:none;align-self:flex-end;" onclick="nextQuestion()">Next →</button>
+    </div>
+
+    <!-- Result screen -->
+    <div id="quiz-result">
+      <div class="score-circle" id="score-circle">
+        <span class="score-num" id="score-num">0/10</span>
+      </div>
+      <h2 id="result-title">Round complete!</h2>
+      <p id="result-msg">Keep grinding, mon ami.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+        <button class="btn btn-primary" onclick="restartQuiz()">Play again</button>
+        <button class="btn btn-ghost" onclick="goToStart()">Change mode</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ VOCAB PAGE ═══════════ -->
+<div class="page" id="page-vocab">
+  <div class="page-header">
+    <h1>Vocabulary List</h1>
+    <p>All <span id="vocab-total">0</span> words, paginated so you don't cry.</p>
+  </div>
+  <div class="content">
+    <div class="vocab-toolbar">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" type="text" id="vocab-search" placeholder="Search French or English…" oninput="vocabSearch()">
+      </div>
+      <button class="toggle-dir" id="toggle-dir-btn" onclick="toggleDir()">🇫🇷→🇬🇧</button>
+    </div>
+
+    <div class="vocab-table-wrap">
+      <div class="table-scroll">
+        <table class="vocab-table">
+          <thead>
+            <tr>
+              <th id="th-col1">French</th>
+              <th id="th-col2">English</th>
+            </tr>
+          </thead>
+          <tbody id="vocab-tbody"></tbody>
+        </table>
+      </div>
+      <div class="vocab-pagination">
+        <span class="page-info" id="vocab-page-info">Page 1 of 3</span>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-ghost" id="vocab-prev" onclick="vocabPrev()">← Prev</button>
+          <button class="btn btn-ghost" id="vocab-next" onclick="vocabNext()">Next →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ GRAMMAR PAGE ════════ -->
+<div class="page" id="page-grammar">
+  <div class="page-header">
+    <h1>Grammar Basics</h1>
+    <p>The bare minimum to not sound like a complete disaster in French.</p>
+  </div>
+  <div class="scroll-area">
+
+    <!-- GENDERED NOUNS -->
+    <div class="grammar-card">
+      <h3><span class="icon">⚧️</span> Gendered Nouns</h3>
+      <p>Every single noun in French is either <strong>masculine</strong> or <strong>feminine</strong>. There's no logic. You just memorise it. Welcome to hell.</p>
+      <br>
+      <p><strong>Masculine → </strong><span class="grammar-tag masc">le</span> / <span class="grammar-tag masc">un</span></p>
+      <p><strong>Feminine → </strong><span class="grammar-tag fem">la</span> / <span class="grammar-tag fem">une</span></p>
+      <br>
+      <p>From your vocab list:</p>
+      <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;">
+        <span class="grammar-tag masc">le frère</span>
+        <span class="grammar-tag masc">le livre</span>
+        <span class="grammar-tag masc">le prénom</span>
+        <span class="grammar-tag masc">le nom</span>
+        <span class="grammar-tag fem">la sœur</span>
+        <span class="grammar-tag fem">la table</span>
+      </div>
+      <div class="highlight-box">💡 Tip: when you learn a new noun, always memorise its article too. Don't just learn <em>livre</em>, learn <em>le livre</em>. Future you will thank present you.</div>
+    </div>
+
+    <!-- ARTICLES -->
+    <div class="grammar-card">
+      <h3><span class="icon">📌</span> Articles</h3>
+      <p>French has two types of article: definite ("the") and indefinite ("a/some").</p>
+      <table class="grammar-table">
+        <thead><tr><th>Article</th><th>Use</th><th>Example</th></tr></thead>
+        <tbody>
+          <tr><td>le / la / les</td><td>definite — "the"</td><td>le livre, la sœur</td></tr>
+          <tr><td>un / une / des</td><td>indefinite — "a / some"</td><td>un livre, une table</td></tr>
+        </tbody>
+      </table>
+      <br>
+      <p><span class="grammar-tag">les livres</span> = <em>the books</em> &nbsp;|&nbsp; <span class="grammar-tag">des livres</span> = <em>some books</em></p>
+      <div class="highlight-box">⚠️ Before a vowel sound, <em>le</em> and <em>la</em> both become <strong>l'</strong>. E.g. <em>l'étudiant</em>.</div>
+    </div>
+
+    <!-- PRONOUNS -->
+    <div class="grammar-card">
+      <h3><span class="icon">👤</span> Subject Pronouns</h3>
+      <table class="grammar-table">
+        <thead><tr><th>French</th><th>English</th><th>Note</th></tr></thead>
+        <tbody>
+          <tr><td>je</td><td>I</td><td>becomes j' before vowel</td></tr>
+          <tr><td>tu</td><td>you (1 person)</td><td>informal — for friends</td></tr>
+          <tr><td>vous</td><td>you (1 or many)</td><td>formal OR plural</td></tr>
+          <tr><td>il / elle</td><td>he / she</td><td></td></tr>
+          <tr><td>nous</td><td>we</td><td></td></tr>
+          <tr><td>ils / elles</td><td>they</td><td>ils = mixed/masc, elles = all fem</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- TU vs VOUS -->
+    <div class="grammar-card">
+      <h3><span class="icon">🤝</span> tu vs vous</h3>
+      <p>This one actually matters or people will think you're rude:</p>
+      <br>
+      <p><strong>tu</strong> — use with friends, family, kids, peers. Casual.</p>
+      <p><strong>vous</strong> — use with strangers, older people, bosses, anyone you don't know. Formal.</p>
+      <br>
+      <p>From your vocab:</p>
+      <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;">
+        <span class="grammar-tag">Comment vas-tu ? (informal)</span>
+        <span class="grammar-tag">Comment allez-vous ? (formal)</span>
+      </div>
+      <div class="highlight-box">✅ When in doubt, use <em>vous</em>. Using <em>tu</em> with the wrong person is embarrassing. Using <em>vous</em> with a friend just makes you look polite.</div>
+    </div>
+
+    <!-- SENTENCE STRUCTURE -->
+    <div class="grammar-card wide">
+      <h3><span class="icon">🧩</span> Basic Sentence Structure</h3>
+      <p>French word order is mostly <strong>Subject → Verb → Complement</strong>, just like English. Phew.</p>
+      <table class="grammar-table">
+        <thead><tr><th>French</th><th>Structure</th><th>English</th></tr></thead>
+        <tbody>
+          <tr><td>Je m'appelle Marie</td><td>je (subj) + m'appelle (verb) + Marie (complement)</td><td>My name is Marie</td></tr>
+          <tr><td>J'habite à Paris</td><td>j' (subj) + habite (verb) + à Paris (complement)</td><td>I live in Paris</td></tr>
+          <tr><td>Tu t'appelles comment ?</td><td>tu (subj) + t'appelles (verb) + comment (question)</td><td>What's your name?</td></tr>
+          <tr><td>Je suis étudiant</td><td>je (subj) + suis (verb) + étudiant (noun/adj)</td><td>I am a student</td></tr>
+        </tbody>
+      </table>
+      <div class="highlight-box">🔑 Reflexive verbs like <em>s'appeler</em> (to be called) need a reflexive pronoun: je <strong>me</strong> → j'<strong>m'</strong>appelle. It looks weird. It's fine. You'll get used to it.</div>
+    </div>
+
+    <!-- GREETINGS & FORMALITY -->
+    <div class="grammar-card">
+      <h3><span class="icon">👋</span> Greetings & Formality</h3>
+      <table class="grammar-table">
+        <thead><tr><th>French</th><th>When</th></tr></thead>
+        <tbody>
+          <tr><td>Bonjour</td><td>Hello / Good morning — anytime until ~6pm</td></tr>
+          <tr><td>Bonsoir</td><td>Good evening — after ~6pm</td></tr>
+          <tr><td>Salut</td><td>Hi — very casual, friends only</td></tr>
+          <tr><td>Au revoir</td><td>Goodbye</td></tr>
+          <tr><td>Enchanté(e)</td><td>Nice to meet you — Enchanté (m) / Enchantée (f)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- THE Œ SOUND -->
+    <div class="grammar-card">
+      <h3><span class="icon">🔤</span> The Œ / œ Ligature</h3>
+      <p>This weird letter (œ) is called a <strong>ligature</strong> — it's an 'o' and 'e' fused together. It appears in a handful of common words.</p>
+      <div class="pronunciation-box">
+        <div class="ipa">œ</div>
+        <p>Pronounced roughly like the 'u' in <em>hurt</em>, or the German ö. Round your lips like you're saying "o" but try to say "eh". Congratulations, you sound French.</p>
+      </div>
+      <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:6px;">
+        <span class="grammar-tag">sœur (sister)</span>
+        <span class="grammar-tag">cœur (heart)</span>
+        <span class="grammar-tag">œuf (egg)</span>
+        <span class="grammar-tag">œil (eye)</span>
+        <span class="grammar-tag">bœuf (beef/ox)</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════ JAVASCRIPT ═══════════════ -->
+<script>
+// ─── DATA ───────────────────────────────────────────────────────
+const VOCAB = [
+  { fr: "j'habite à", en: "I live in" },
+  { fr: "Bonjour", en: "Hello / Good morning" },
+  { fr: "Je m'appelle", en: "My name is" },
+  { fr: "Enchanté(e)", en: "Nice to meet you" },
+  { fr: "prénom", en: "first name" },
+  { fr: "nom", en: "surname / last name" },
+  { fr: "Bonsoir", en: "Good evening" },
+  { fr: "Comment allez-vous ?", en: "How are you? (formal)" },
+  { fr: "Comment vas-tu ?", en: "How are you? (informal)" },
+  { fr: "Tu vas bien ?", en: "Are you doing well?" },
+  { fr: "Ça va ?", en: "How's it going?" },
+  { fr: "Oui, je vais bien, merci", en: "Yes, I'm doing well, thank you" },
+  { fr: "Bien, merci", en: "Good, thank you" },
+  { fr: "Ça va, merci", en: "I'm fine, thanks" },
+  { fr: "Et vous ?", en: "And you? (formal)" },
+  { fr: "Comment ça va ?", en: "How are you doing?" },
+  { fr: "Moi aussi", en: "Me too" },
+  { fr: "Je suis", en: "I am" },
+  { fr: "Tu t'appelles comment ?", en: "What's your name? (informal)" },
+  { fr: "Vous vous appelez comment ?", en: "What's your name? (formal)" },
+  { fr: "Vous habitez où ?", en: "Where do you live? (formal)" },
+  { fr: "Tu habites où ?", en: "Where do you live? (informal)" },
+  { fr: "où", en: "where" },
+  { fr: "le", en: "the (masculine singular)" },
+  { fr: "la", en: "the (feminine singular)" },
+  { fr: "les", en: "the (plural)" },
+  { fr: "un", en: "a / an (masculine)" },
+  { fr: "une", en: "a / an (feminine)" },
+  { fr: "des", en: "some (plural)" },
+  { fr: "le frère", en: "the brother" },
+  { fr: "la sœur", en: "the sister" },
+  { fr: "le livre", en: "the book" },
+  { fr: "les livres", en: "the books" },
+  { fr: "la table", en: "the table" },
+  { fr: "Œ / œ", en: "the ligature OE — used in words like sœur, œuf" },
+];
+
+const PACKS = [
+  { id: 'pack1', name: 'Les Bases', description: 'Pack 1 — Introductions & basics', words: VOCAB }
+];
+
+// ─── NAVIGATION ─────────────────────────────────────────────────
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  const btns = document.querySelectorAll('.nav-btn');
+  const pages = ['flash', 'quiz', 'vocab', 'grammar'];
+  btns[pages.indexOf(id)].classList.add('active');
+  if (id === 'vocab') renderVocab();
+}
+
+// ─── LOCAL STORAGE HELPERS ───────────────────────────────────────
+function getSRS() {
+  try { return JSON.parse(localStorage.getItem('frenchup_srs') || '{}'); } catch { return {}; }
+}
+function saveSRS(data) { localStorage.setItem('frenchup_srs', JSON.stringify(data)); }
+
+// ─── FLASHCARDS ──────────────────────────────────────────────────
+let flashQueue = [];
+let flashIndex = 0;
+let flashRating = null;
+let currentPack = null;
+const PER_SESSION = 15;
+
+function initFlash() {
+  const packList = document.getElementById('pack-list');
+  packList.innerHTML = '';
+  const srs = getSRS();
+  PACKS.forEach(pack => {
+    const now = Date.now();
+    const due = pack.words.filter(w => {
+      const key = pack.id + ':' + w.fr;
+      const entry = srs[key];
+      return !entry || entry.nextReview <= now;
+    });
+    const div = document.createElement('div');
+    div.className = 'pack-card';
+    div.innerHTML = `
+      <div class="pack-name">${pack.name}</div>
+      <div class="pack-meta">${pack.words.length} cards total · ${pack.description}</div>
+      <div class="pack-due">${due.length} card${due.length !== 1 ? 's' : ''} due now</div>
+    `;
+    div.onclick = () => startPack(pack);
+    packList.appendChild(div);
+  });
+}
+
+function startPack(pack) {
+  currentPack = pack;
+  const srs = getSRS();
+  const now = Date.now();
+
+  const due = pack.words.filter(w => {
+    const key = pack.id + ':' + w.fr;
+    const entry = srs[key];
+    return !entry || entry.nextReview <= now;
+  });
+
+  // shuffle due cards, take up to PER_SESSION
+  flashQueue = shuffle([...due]).slice(0, PER_SESSION);
+  flashIndex = 0;
+
+  if (flashQueue.length === 0) {
+    // show done immediately
+    showFlashDone();
+    return;
+  }
+
+  document.getElementById('flash-pack-select').style.display = 'none';
+  document.getElementById('flash-done').classList.remove('visible');
+  document.getElementById('flash-study').classList.add('visible');
+  showFlashCard();
+}
+
+function showFlashCard() {
+  if (flashIndex >= flashQueue.length) { showFlashDone(); return; }
+  const card = flashQueue[flashIndex];
+  document.getElementById('flip-fr').textContent = card.fr;
+  document.getElementById('flip-en').textContent = card.en;
+  document.getElementById('flip-inner').classList.remove('flipped');
+  document.getElementById('rating-row').classList.remove('show');
+  document.getElementById('interval-row').classList.remove('show');
+  flashRating = null;
+  // progress
+  const pct = (flashIndex / flashQueue.length) * 100;
+  document.getElementById('flash-progress-fill').style.width = pct + '%';
+  document.getElementById('flash-count').textContent = (flashIndex + 1) + ' / ' + flashQueue.length;
+}
+
+function flipCard() {
+  const inner = document.getElementById('flip-inner');
+  if (!inner.classList.contains('flipped')) {
+    inner.classList.add('flipped');
+    setTimeout(() => document.getElementById('rating-row').classList.add('show'), 300);
+  }
+}
+
+function rate(r) {
+  flashRating = r;
+  document.getElementById('rating-row').classList.remove('show');
+  setTimeout(() => document.getElementById('interval-row').classList.add('show'), 200);
+}
+
+function setInterval_(ms) {
+  if (!flashRating || !currentPack) return;
+  const card = flashQueue[flashIndex];
+  const srs = getSRS();
+  const key = currentPack.id + ':' + card.fr;
+  srs[key] = { nextReview: Date.now() + ms, lastRating: flashRating };
+  saveSRS(srs);
+  flashIndex++;
+  showFlashCard();
+}
+
+function showFlashDone() {
+  document.getElementById('flash-study').classList.remove('visible');
+  document.getElementById('flash-pack-select').style.display = 'none';
+  document.getElementById('flash-done').classList.add('visible');
+  document.getElementById('flash-progress-fill').style.width = '100%';
+}
+
+function backToPacks() {
+  document.getElementById('flash-done').classList.remove('visible');
+  document.getElementById('flash-pack-select').style.display = 'flex';
+  initFlash();
+}
+
+// ─── QUIZ ────────────────────────────────────────────────────────
+let quizMode = 'mc';
+let quizQuestions = [];
+let quizIdx = 0;
+let quizScore = 0;
+let quizAnswered = false;
+let quizXP = 0;
+// match state
+let matchLeft = []; let matchRight = []; let matchSelected = null;
+let matchMatched = []; let matchCorrectMap = {};
+
+function selectMode(el, mode) {
+  document.querySelectorAll('.quiz-mode-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  quizMode = mode;
+}
+
+function startQuiz() {
+  quizQuestions = buildQuestions(quizMode, 10);
+  quizIdx = 0; quizScore = 0; quizXP = 0; quizAnswered = false;
+  document.getElementById('quiz-start').style.display = 'none';
+  document.getElementById('quiz-result').classList.remove('visible');
+  document.getElementById('quiz-game').classList.add('visible');
+  document.getElementById('quiz-xp').textContent = '⚡ 0 XP';
+  renderQuestion();
+}
+
+function buildQuestions(mode, n) {
+  const pool = shuffle([...VOCAB]);
+  const qs = [];
+  for (let i = 0; i < n && i < pool.length; i++) {
+    qs.push({ ...pool[i], mode });
+  }
+  return qs;
+}
+
+function renderQuestion() {
+  const q = quizQuestions[quizIdx];
+  quizAnswered = false;
+  const pct = (quizIdx / quizQuestions.length) * 100;
+  document.getElementById('quiz-progress-fill').style.width = pct + '%';
+  document.getElementById('quiz-q-count').textContent = (quizIdx + 1) + ' / ' + quizQuestions.length;
+  document.getElementById('quiz-feedback').textContent = '';
+  document.getElementById('quiz-feedback').className = 'quiz-feedback';
+  document.getElementById('quiz-next-btn').style.display = 'none';
+
+  if (q.mode === 'mc') renderMC(q);
+  else if (q.mode === 'fitb') renderFITB(q);
+  else if (q.mode === 'match') renderMatch();
+}
+
+function renderMC(q) {
+  document.getElementById('quiz-type-tag').textContent = '🎯 Multiple Choice';
+  document.getElementById('quiz-question').textContent = 'What does "' + q.fr + '" mean?';
+  // distractors
+  const others = shuffle(VOCAB.filter(w => w.en !== q.en)).slice(0, 3);
+  const opts = shuffle([q, ...others]);
+  const area = document.getElementById('quiz-answer-area');
+  area.innerHTML = '<div class="mc-options">' +
+    opts.map(o => `<button class="mc-option" onclick="checkMC(this,'${escStr(o.en)}','${escStr(q.en)}')">${o.en}</button>`).join('') +
+    '</div>';
+}
+
+function checkMC(btn, chosen, correct) {
+  if (quizAnswered) return;
+  quizAnswered = true;
+  const all = btn.closest('.mc-options').querySelectorAll('.mc-option');
+  all.forEach(b => { b.disabled = true; if (b.textContent === correct) b.classList.add('correct'); });
+  if (chosen === correct) {
+    btn.classList.add('correct');
+    showFeedback(true);
+  } else {
+    btn.classList.add('wrong');
+    document.getElementById('quiz-card').classList.add('shake');
+    setTimeout(() => document.getElementById('quiz-card').classList.remove('shake'), 500);
+    showFeedback(false, 'Correct answer: ' + correct);
+  }
+  document.getElementById('quiz-next-btn').style.display = 'flex';
+}
+
+function renderFITB(q) {
+  document.getElementById('quiz-type-tag').textContent = '✍️ Fill in the Blank';
+  document.getElementById('quiz-question').textContent = 'Translate into French:';
+  const area = document.getElementById('quiz-answer-area');
+  area.innerHTML = `
+    <div style="margin-bottom:8px;font-family:'Syne',sans-serif;font-size:18px;color:var(--accent3);">"${q.en}"</div>
+    <input class="fitb-input" type="text" id="fitb-input" placeholder="Type in French…" autocomplete="off">
+    <button class="btn btn-primary" onclick="checkFITB()">Check</button>
+  `;
+  document.getElementById('fitb-input').onkeydown = e => { if (e.key === 'Enter') checkFITB(); };
+  setTimeout(() => { const el = document.getElementById('fitb-input'); if (el) el.focus(); }, 50);
+}
+
+function checkFITB() {
+  if (quizAnswered) return;
+  const input = document.getElementById('fitb-input');
+  if (!input) return;
+  const val = input.value.trim();
+  if (!val) return;
+  const q = quizQuestions[quizIdx];
+  const correct = q.fr.toLowerCase().replace(/[?!.,]/g,'').trim();
+  const given = val.toLowerCase().replace(/[?!.,]/g,'').trim();
+  quizAnswered = true;
+  input.disabled = true;
+  if (given === correct) {
+    input.classList.add('correct');
+    showFeedback(true);
+  } else {
+    input.classList.add('wrong');
+    document.getElementById('quiz-card').classList.add('shake');
+    setTimeout(() => document.getElementById('quiz-card').classList.remove('shake'), 500);
+    showFeedback(false, 'Answer: ' + q.fr);
+  }
+  document.getElementById('quiz-next-btn').style.display = 'flex';
+}
+
+function renderMatch() {
+  // Pick 5 pairs for match
+  document.getElementById('quiz-type-tag').textContent = '🔗 Match the Pairs';
+  document.getElementById('quiz-question').textContent = 'Match each French word to its English meaning.';
+
+  const pairs = shuffle([...VOCAB]).slice(0, 5);
+  matchLeft = pairs.map(p => p.fr);
+  matchRight = shuffle(pairs.map(p => p.en));
+  matchCorrectMap = {};
+  pairs.forEach(p => { matchCorrectMap[p.fr] = p.en; });
+  matchMatched = [];
+  matchSelected = null;
+
+  renderMatchUI();
+}
+
+function renderMatchUI() {
+  const area = document.getElementById('quiz-answer-area');
+  area.innerHTML = `<div class="match-grid">
+    <div class="match-col" id="match-left">
+      ${matchLeft.map((w, i) => {
+        const done = matchMatched.some(m => m.fr === w);
+        const cls = done ? 'match-item matched-correct' : 'match-item';
+        return `<div class="${cls}" data-idx="${i}" data-side="left" onclick="matchClick(this)">${w}</div>`;
+      }).join('')}
+    </div>
+    <div class="match-col" id="match-right">
+      ${matchRight.map((w, i) => {
+        const done = matchMatched.some(m => m.en === w);
+        const cls = done ? 'match-item matched-correct' : 'match-item';
+        return `<div class="${cls}" data-idx="${i}" data-side="right" onclick="matchClick(this)">${w}</div>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+
+function matchClick(el) {
+  if (el.classList.contains('matched-correct')) return;
+  if (matchSelected === null) {
+    matchSelected = el;
+    el.classList.add('selected');
+    return;
+  }
+  // second click
+  const first = matchSelected;
+  matchSelected = null;
+  first.classList.remove('selected');
+
+  let frWord, enWord, frEl, enEl;
+  if (first.dataset.side === 'left' && el.dataset.side === 'right') {
+    frWord = first.textContent; enWord = el.textContent; frEl = first; enEl = el;
+  } else if (first.dataset.side === 'right' && el.dataset.side === 'left') {
+    frWord = el.textContent; enWord = first.textContent; frEl = el; enEl = first;
+  } else {
+    // same side — deselect and select new
+    el.classList.add('selected');
+    matchSelected = el;
+    return;
+  }
+
+  if (matchCorrectMap[frWord] === enWord) {
+    frEl.classList.add('matched-correct'); enEl.classList.add('matched-correct');
+    matchMatched.push({ fr: frWord, en: enWord });
+    if (matchMatched.length === matchLeft.length) {
+      showFeedback(true, 'All pairs matched! 🎉');
+      quizAnswered = true;
+      quizScore++;
+      quizXP += 15;
+      document.getElementById('quiz-xp').textContent = '⚡ ' + quizXP + ' XP';
+      document.getElementById('quiz-next-btn').style.display = 'flex';
+    }
+  } else {
+    frEl.classList.add('matched-wrong'); enEl.classList.add('matched-wrong');
+    setTimeout(() => { frEl.classList.remove('matched-wrong'); enEl.classList.remove('matched-wrong'); }, 500);
+  }
+}
+
+function showFeedback(correct, msg) {
+  const fb = document.getElementById('quiz-feedback');
+  if (correct && quizMode !== 'match') {
+    quizScore++;
+    quizXP += 10;
+    document.getElementById('quiz-xp').textContent = '⚡ ' + quizXP + ' XP';
+    fb.textContent = '✅ Correct! +10 XP';
+    fb.className = 'quiz-feedback correct';
+    document.getElementById('quiz-card').classList.add('pop');
+    setTimeout(() => document.getElementById('quiz-card').classList.remove('pop'), 300);
+  } else if (!correct) {
+    fb.textContent = msg ? '❌ ' + msg : '❌ Wrong!';
+    fb.className = 'quiz-feedback wrong';
+  } else {
+    fb.textContent = msg || '✅ All matched!';
+    fb.className = 'quiz-feedback correct';
+  }
+}
+
+function nextQuestion() {
+  quizIdx++;
+  if (quizIdx >= quizQuestions.length) {
+    showQuizResult();
+  } else {
+    renderQuestion();
+  }
+}
+
+function showQuizResult() {
+  document.getElementById('quiz-game').classList.remove('visible');
+  const res = document.getElementById('quiz-result');
+  res.classList.add('visible');
+  const pct = Math.round((quizScore / quizQuestions.length) * 100);
+  document.getElementById('score-circle').style.setProperty('--pct', pct);
+  document.getElementById('score-num').textContent = quizScore + '/' + quizQuestions.length;
+  const msgs = [
+    [0, 30, "Mon Dieu… that was rough. Flip some cards first?"],
+    [31, 60, "Not terrible. Could be worse. Could be better."],
+    [61, 80, "Pretty decent! You're getting it."],
+    [81, 99, "Très bien! You actually know this stuff!"],
+    [100, 100, "Parfait! You absolute legend. 🥐"]
+  ];
+  const m = msgs.find(([lo, hi]) => pct >= lo && pct <= hi);
+  document.getElementById('result-title').textContent = pct >= 80 ? 'Impressive! 🎉' : pct >= 50 ? 'Not bad!' : 'Rough session.';
+  document.getElementById('result-msg').textContent = m[2];
+}
+
+function restartQuiz() {
+  document.getElementById('quiz-result').classList.remove('visible');
+  startQuiz();
+}
+function goToStart() {
+  document.getElementById('quiz-result').classList.remove('visible');
+  document.getElementById('quiz-game').classList.remove('visible');
+  document.getElementById('quiz-start').style.display = 'flex';
+}
+
+// ─── VOCAB LIST ──────────────────────────────────────────────────
+const ROWS_PER_PAGE = 15;
+let vocabPage = 0;
+let vocabDir = 'fr-en'; // or 'en-fr'
+let vocabFiltered = [...VOCAB];
+
+document.getElementById('vocab-total').textContent = VOCAB.length;
+
+function vocabSearch() {
+  const q = document.getElementById('vocab-search').value.toLowerCase();
+  if (!q) { vocabFiltered = [...VOCAB]; }
+  else {
+    vocabFiltered = VOCAB.filter(w =>
+      w.fr.toLowerCase().includes(q) || w.en.toLowerCase().includes(q)
+    );
+  }
+  vocabPage = 0;
+  renderVocab();
+}
+
+function toggleDir() {
+  vocabDir = vocabDir === 'fr-en' ? 'en-fr' : 'fr-en';
+  const btn = document.getElementById('toggle-dir-btn');
+  btn.textContent = vocabDir === 'fr-en' ? '🇫🇷→🇬🇧' : '🇬🇧→🇫🇷';
+  btn.classList.toggle('active-dir', vocabDir === 'en-fr');
+  document.getElementById('th-col1').textContent = vocabDir === 'fr-en' ? 'French' : 'English';
+  document.getElementById('th-col2').textContent = vocabDir === 'fr-en' ? 'English' : 'French';
+  renderVocab();
+}
+
+function renderVocab() {
+  const total = vocabFiltered.length;
+  const totalPages = Math.max(1, Math.ceil(total / ROWS_PER_PAGE));
+  if (vocabPage >= totalPages) vocabPage = totalPages - 1;
+  const start = vocabPage * ROWS_PER_PAGE;
+  const page = vocabFiltered.slice(start, start + ROWS_PER_PAGE);
+
+  const tbody = document.getElementById('vocab-tbody');
+  tbody.innerHTML = page.map(w => {
+    const col1 = vocabDir === 'fr-en' ? w.fr : w.en;
+    const col2 = vocabDir === 'fr-en' ? w.en : w.fr;
+    const cls1 = vocabDir === 'fr-en' ? 'vocab-col-fr' : 'vocab-col-en';
+    const cls2 = vocabDir === 'fr-en' ? 'vocab-col-en' : 'vocab-col-fr';
+    return `<tr><td class="${cls1}">${col1}</td><td class="${cls2}">${col2}</td></tr>`;
+  }).join('');
+
+  document.getElementById('vocab-page-info').textContent = `Page ${vocabPage + 1} of ${totalPages} (${total} entries)`;
+  document.getElementById('vocab-prev').disabled = vocabPage === 0;
+  document.getElementById('vocab-next').disabled = vocabPage >= totalPages - 1;
+}
+
+function vocabPrev() { if (vocabPage > 0) { vocabPage--; renderVocab(); } }
+function vocabNext() {
+  const totalPages = Math.ceil(vocabFiltered.length / ROWS_PER_PAGE);
+  if (vocabPage < totalPages - 1) { vocabPage++; renderVocab(); }
+}
+
+// ─── UTILS ───────────────────────────────────────────────────────
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function escStr(s) {
+  return s.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+}
+
+// ─── INIT ────────────────────────────────────────────────────────
+initFlash();
+renderVocab();
+</script>
+</body>
+</html>
